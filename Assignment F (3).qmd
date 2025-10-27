@@ -171,6 +171,40 @@ ggplot(other_and_organic_type, aes(type, Value,fill = type))+
   theme_minimal()
 
 #hu yike
+
+library(dplyr)
+library(ggplot2)
+
+top_states <- df %>%
+  filter(Domain == "CHEMICAL, OTHER") %>%
+  group_by(State) %>%
+  summarise(mean_value = mean(Value, na.rm = TRUE)) %>%
+  arrange(desc(mean_value)) %>%
+  slice_head(n = 5) %>%
+  pull(State)
+
+
+trend_top <- df %>%
+  filter(Domain == "CHEMICAL, OTHER", State %in% top_states) %>%
+  group_by(State, Year) %>%
+  summarise(mean_value = mean(Value, na.rm = TRUE), .groups = "drop")
+
+ggplot(trend_top, aes(x = Year, y = mean_value, color = State)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(
+    title = "Trend of Other Chemical Use (Top 5 States)",
+    x = "Year",
+    y = "Average Value"
+  ) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "bottom"
+  )
+
+
+
 ```
 
 ##Raw data acquisition 
