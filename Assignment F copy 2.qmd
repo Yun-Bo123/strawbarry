@@ -1,0 +1,152 @@
+---
+title: "Assignment F"
+format: html
+editor: visual
+---\\\\
+---
+
+## Introduction to Github Team Workflow - Branches
+
+List of references:
+
+-   <https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging>
+
+-   <https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow?utm_source=chatgpt.com>
+
+-   <https://docs.github.com/en/get-started/using-github/github-flow?utm_source=chatgpt.com>
+
+-   <https://docs.github.com/en/account-and-profile/how-tos/setting-up-and-managing-your-personal-account-on-github/managing-access-to-your-personal-repositories/inviting-collaborators-to-a-personal-repository?utm_source=chatgpt.com>
+
+As a part of this assignment, you are also required to complete all the exercises in the Introduction Sequence on the 'Main' tab and 1-4 on Push & Pull on the 'Remote' tab. ( <https://learngitbranching.js.org/?locale=en_US>)
+
+You want all the boxes in "level selection" to be green to show you have completed them.  You can retrieve what your progress looks like at any time by clicking on the little question mark in the bottom right hand corner and clicking 'Levels'. Once you have completed the requisite exercises, upload screenshots of "Level Selection" in the repository with folder called "learn git branching"
+
+## Assignment Instructions
+
+This assignment will be a Team work. We will decide number of teammates based on total students present in the class (\~26 students)
+
+Following are the themes of work (Based on Strawberry Data set) for different groups:
+
+1.  Fungicides \[Organic vs Conventional by state\]
+2.  Herbicides \[Organic vs Conventional by state\]
+3.  Insecticides \[Organic vs Conventional by state\]
+4.  Fertilizers \[Organic vs Conventional by state\]
+5.  Other Chemicals \[Organic vs Conventional by state\]
+6.  Yield \[Organic vs Conventional by state\]
+7.  Profitability \[Price, Volume, Variable Cost, Fixed Cost\]
+8.  Markets
+9.  Transportation (Logistics)
+
+All of above is in addition to the data cleaning of Strawberry data set talked about in the class.
+
+### Deliverable
+
+Each team will submit a **GitHub repository** that includes:
+
+-   **Main branch**
+
+```         
+-    Final Report (`.pdf`, `.html`, and `.qmd`)
+
+-    Cleaned data sets (`.csv`)
+
+-    Well-written `README.md` file describing your project
+
+-    Any scripts or code files used
+
+-   Folder called "learn git branching" containing images of the "level selection" (main and remote)
+```
+
+-   **Clear organization:** The repository should be understandable to someone unfamiliar with your project. (with logical folder structure, clear file names, and documented steps)
+
+Your **final report** should include:
+
+-   Overview of the topic and research question
+
+-   Description of the data cleaning process
+
+-   Key analyses and findings
+
+-   **Visualizations** with thoughtful explanations
+
+-   If needed, integration of **external data sources** relevant to your theme
+
+### Secondary Objective — *Industry-Level Git Collaboration*
+
+In addition to the data analysis, this assignment is also designed to help you **experience real-world teamwork on GitHub**, just as teams do in industry.
+
+So make sure your group:
+
+1.  Works within a **shared GitHub repository** (one repo per team).
+
+2.  Invites all teammates as **collaborators** (no forks).
+
+3.  Uses **branches** for individual work (`feature-username`, `analysis-theme`, etc.).
+
+4.  Opens **pull requests** to merge branches into `main` after peer review.
+
+5.  Practices **resolving merge conflicts**, **pulling latest changes**, and maintaining a clean commit history.
+
+6.  Protects the `main` branch to require pull requests (no direct pushes).
+
+```{r}
+library(tidyverse)
+df<- read_csv("strawberry raw.csv")
+str(df)
+df<- df %>% 
+  select(where(~!all(is.na(.)))) |> #delete columns with all NA
+  select(where(~ n_distinct(.,na.rm = TRUE)>1) ) |>#delete columns with single value, which means no information provided in comparing
+  mutate(Year = as.integer(Year),
+         Value = str_replace_all(Value, ",", ""),
+         Value = as.numeric(Value),
+         State = as.factor(State),
+         Domain = as.factor(Domain),
+         `Domain Category` = as.factor(`Domain Category`)) 
+other<- df|> #find those use other chemicals
+  filter(Domain == "CHEMICAL, OTHER")
+other_che<- other|> #inside the other chemical, group by different other chemicals
+  group_by(`Domain Category`)|>
+  summarise(mean_value = mean(Value, na.rm = TRUE),
+            sd_value = sd(Value, na.rm = TRUE),
+            n=n())
+view(other_che)
+ggplot(other_che,
+       aes(x = reorder(`Domain Category`, n),
+           y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Number of Records per Other Chemical Category",
+    x = "Other Chemical Category",
+    y = "Count (n)") +
+  theme_minimal()
+df<- df|> #detect whether it's conventional or organic
+  mutate(type = case_when(
+    str_detect(Domain,"CHEMICAL") ~ "Conventional",
+    !str_detect(Domain,"CHEMICAL") ~ "Organic"
+  )
+  )
+organic_vs_convention<- df|>
+  group_by(State, type)|>
+  summarise(
+    mean_value = mean(Value, na.rm = TRUE),
+    sd_value = sd(Value, na.rm = TRUE),
+    n = n()
+  ) |>
+  arrange(mean_value)
+ggplot(organic_vs_convention,aes(State,mean_value,fill = type))+
+  geom_col(position = "dodge")+
+  coord_flip()+
+  labs(title = "mean_value between conventional and organic in differenct states",
+       x = "state",
+       y= "mean value")+
+  theme_minimal()
+ggplot(df, aes(type, Value,fill = type))+
+  geom_boxplot() +
+  theme_minimal()
+
+
+
+```
+
+##Raw data acquisition #The raw strawberry dataset used in this analysis was obtained from the United States Department of Agriculture (USDA) National Agricultural Statistics Service (NASS), which provides publicly available agricultural data. #Specifically, the data were downloaded from the NASS Quick Stats database (https://quickstats.nass.usda.gov/) Data retrieved: October 2025 Citation:U.S. Department of Agriculture, National Agricultural Statistics Service (NASS). Quick Stats Database. https://quickstats.nass.usda.gov/
