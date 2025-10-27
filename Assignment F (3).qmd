@@ -111,6 +111,7 @@ other_che<- other|> #inside the other chemical, group by different other chemica
             n=n())
 view(other_che)
 straw <- read.csv("strawberry raw.csv", stringsAsFactors = FALSE)
+#zhang yunbo
 library(dplyr)
 library(stringr)
 library(ggplot2)
@@ -139,6 +140,7 @@ ggplot(state_chem_use, aes(x = reorder(State, -total_chemical), y = total_chemic
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "none"
   )
+#guan zhixuan
 
 
 
