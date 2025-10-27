@@ -110,40 +110,38 @@ other_che<- other|> #inside the other chemical, group by different other chemica
             sd_value = sd(Value, na.rm = TRUE),
             n=n())
 view(other_che)
-ggplot(other_che,
-       aes(x = reorder(`Domain Category`, n),
-           y = n)) +
-  geom_col() +
-  coord_flip() +
+straw <- read.csv("strawberry raw.csv", stringsAsFactors = FALSE)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+straw_clean <- straw %>%
+  filter(grepl("CHEMICAL", Domain.Category, ignore.case = TRUE)) %>%
+  mutate(
+    chemical_amount = as.numeric(str_extract(Domain.Category, "(?<=\\= )\\d+")),
+    chemical_name = str_extract(Domain.Category, "(?<=\\()[A-Z0-9\\s]+(?=\\s*=)"),
+    chemical_type = str_extract(Domain, "(?<=CHEMICAL, )\\w+")
+  )
+state_chem_use <- straw_clean %>%
+  group_by(State) %>%
+  summarise(total_chemical = sum(chemical_amount, na.rm = TRUE)) %>%
+  arrange(desc(total_chemical))
+print(state_chem_use)
+ggplot(state_chem_use, aes(x = reorder(State, -total_chemical), y = total_chemical, fill = State)) +
+  geom_bar(stat = "identity", width = 0.6) +
   labs(
-    title = "Number of Records per Other Chemical Category",
-    x = "Other Chemical Category",
-    y = "Count (n)") +
-  theme_minimal()
-df<- df|> #detect whether it's conventional or organic
-  mutate(type = case_when(
-    str_detect(Domain,"CHEMICAL") ~ "Conventional",
-    !str_detect(Domain,"CHEMICAL") ~ "Organic"
+    title = "Total Chemical Use by State (Strawberries)",
+    x = "State",
+    y = "Total Chemical Amount (sum of reported chemicals)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
   )
-  )
-organic_vs_convention<- df|>
-  group_by(State, type)|>
-  summarise(
-    mean_value = mean(Value, na.rm = TRUE),
-    sd_value = sd(Value, na.rm = TRUE),
-    n = n()
-  ) |>
-  arrange(mean_value)
-ggplot(organic_vs_convention,aes(State,mean_value,fill = type))+
-  geom_col(position = "dodge")+
-  coord_flip()+
-  labs(title = "mean_value between conventional and organic in differenct states",
-       x = "state",
-       y= "mean value")+
-  theme_minimal()
-ggplot(df, aes(type, Value,fill = type))+
-  geom_boxplot() +
-  theme_minimal()
+
+
+
 
 
 
