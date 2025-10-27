@@ -1,9 +1,52 @@
 ---
-title: "Untitled"
-format: html
-editor: visual
+---
+title: "Strawberry Project Report"
+author: "Yike Hu"
+date: "2025-10-26"
+format: pdf
 ---
 
 ## 
 
-123
+```{r}
+library(tidyverse)
+
+file_path <- "other chemicals with state.csv"
+df <- read_csv(file_path, show_col_types = FALSE)
+
+cat("Data loaded\n")
+cat("Rows:", nrow(df), " Cols:", ncol(df), "\n\n")
+
+miss_count <- sapply(df, function(x) sum(is.na(x)))
+print(miss_count)
+
+miss_pct <- round(colMeans(is.na(df)) * 100, 2)
+cat("\nMissing percent:\n")
+print(miss_pct)
+
+cat("\nTotal missing percent:", round(mean(is.na(df)) * 100, 2), "\n")
+
+cat("\nTop missing columns:\n")
+print(sort(miss_count, decreasing = TRUE)[1:5])
+
+dup_rows <- duplicated(df)
+n_dup <- sum(dup_rows)
+cat("\nDuplicate rows:", n_dup, "\n")
+
+if (n_dup > 0) {
+  cat("\nPreview duplicates:\n")
+  print(head(df[dup_rows, ]))
+  df <- df[!dup_rows, ]
+  cat("\nAfter removing duplicates:", nrow(df), "\n")
+}
+
+write_csv(df, "other_chemicals_clean_basic.csv")
+cat("\nSaved cleaned data\n")
+
+```
+
+The *Other Chemicals* dataset contains 12,969 observations and 21 variables. An initial quality assessment was performed to identify missing values and duplicate records. Approximately 42.9% of all entries were missing, mainly from location-related columns such as *County*, *Zip Code*, *Ag District*, and *Week Ending*, which were entirely empty. These variables were likely excluded in the original USDA data due to aggregation at a higher geographic level.
+
+In contrast, key analytical variables --- including *Program*, *Year*, *Commodity*, *Data Item*, *Domain*, and *Value* --- were complete with no missing observations. This indicates that the core measurement data are reliable and can be safely used for further analysis.
+
+No duplicate rows were detected, suggesting that the dataset is internally consistent and free from redundant entries. A cleaned version of the dataset was created by removing unnecessary columns and saving the result as **\"other_chemicals_clean_basic.csv\"** for subsequent analysis.
